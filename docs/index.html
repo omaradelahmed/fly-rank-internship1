@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Refresh Queue &mdash; A Content Decline Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE7DC;
+    --paper-warm:#E6DFD1;
+    --ink:#20302A;
+    --ink-soft:#4B5850;
+    --decline:#B84730;
+    --grow:#4F7360;
+    --rule:#C9BFA9;
+    --amber:#C68A2E;
+    --max: 760px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    line-height:1.08;
+    color:var(--ink);
+  }
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 24px;}
+  .wide{max-width:960px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    padding:88px 0 56px;
+    border-bottom:1px solid var(--rule);
+  }
+  header.hero .kicker{
+    font-size:15px;
+    color:var(--ink-soft);
+    margin:0 0 18px;
+  }
+  header.hero h1{
+    font-size:clamp(2.4rem, 5vw, 3.6rem);
+    margin:0 0 22px;
+    max-width:11ch;
+  }
+  header.hero p.lede{
+    font-size:19px;
+    max-width:52ch;
+    color:var(--ink-soft);
+    margin:0;
+  }
+
+  /* ---------- Result card ---------- */
+  .result-card{
+    margin:40px auto 0;
+    max-width:960px;
+    padding:32px 24px;
+    background:var(--paper-warm);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:28px 20px;
+  }
+  .stat .num{
+    font-family:'Fraunces', serif;
+    font-size:2.1rem;
+    font-weight:500;
+    color:var(--ink);
+    display:block;
+  }
+  .stat .num.decline{color:var(--decline);}
+  .stat .num.grow{color:var(--grow);}
+  .stat .label{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    display:block;
+    max-width:22ch;
+  }
+
+  /* ---------- Abstract / shared sections ---------- */
+  section{padding:56px 0;}
+  section.shared{border-bottom:1px solid var(--rule);}
+  h2.section-title{
+    font-size:1.7rem;
+    margin:0 0 22px;
+  }
+  p{margin:0 0 18px;}
+  .rule{border:none; border-top:1px solid var(--rule); margin:40px 0;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:15px;
+    margin:22px 0;
+  }
+  th,td{
+    text-align:left;
+    padding:9px 12px;
+    border-bottom:1px solid var(--rule);
+  }
+  th{font-weight:600; color:var(--ink-soft); font-size:13.5px;}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums;}
+
+  .takeaway{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin-top:-6px;
+    padding-left:2px;
+    border-left:2px solid var(--amber);
+    padding-left:12px;
+  }
+
+  /* ---------- Door selector ---------- */
+  .door-select{padding:64px 0 8px;}
+  .door-select h2{font-size:1.7rem; margin:0 0 6px;}
+  .door-select p{color:var(--ink-soft); max-width:56ch;}
+  .doors{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:20px;
+    margin:28px 0 0;
+    max-width:960px;
+  }
+  .door-label{
+    display:block;
+    width:100%;
+    text-align:left;
+    cursor:pointer;
+    border:1px solid var(--rule);
+    background:var(--paper-warm);
+    padding:26px 22px 22px;
+    border-radius:2px;
+    position:relative;
+    font-family:inherit;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .door-label .doorframe{
+    width:34px; height:52px;
+    border:2px solid var(--ink-soft);
+    border-radius:3px 3px 0 0;
+    position:relative;
+    margin-bottom:16px;
+  }
+  .door-label .doorframe::after{
+    content:"";
+    position:absolute;
+    right:5px; top:50%;
+    width:4px; height:4px;
+    border-radius:50%;
+    background:var(--ink-soft);
+  }
+  .door-label .door-title{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:1.15rem;
+    display:block;
+    margin-bottom:4px;
+  }
+  .door-label .door-sub{
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .door-label.active{
+    border-color:var(--ink);
+    background:#fff;
+  }
+  .door-label.active .doorframe{
+    border-color:var(--ink);
+  }
+  .door-label.active .doorframe::after{background:var(--decline);}
+
+  .door-panel{display:none; padding:48px 0 8px;}
+  .door-panel.active{display:block;}
+
+  .callout{
+    background:var(--paper-warm);
+    border:1px solid var(--rule);
+    padding:20px 22px;
+    border-radius:2px;
+    margin:22px 0;
+  }
+  .callout h4{margin:0 0 10px; font-size:15px; font-family:'IBM Plex Sans'; font-weight:600;}
+  .tldr-line{display:flex; gap:10px; margin-bottom:8px; font-size:15px;}
+  .tldr-line b{flex:0 0 92px; color:var(--ink-soft); font-weight:600;}
+
+  .fasm{
+    border-left:2px solid var(--grow);
+    padding-left:16px;
+    margin:26px 0;
+  }
+  .fasm.risk{border-left-color:var(--decline);}
+  .fasm h4{margin:0 0 6px; font-size:16px;}
+  .fasm .fasm-row{font-size:14.5px; margin:4px 0;}
+  .fasm .fasm-row b{color:var(--ink-soft); font-weight:600;}
+
+  code{
+    background:var(--paper-warm);
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:14.5px;
+  }
+
+  .chart-caption{font-size:14px; color:var(--ink-soft); margin-top:8px;}
+  .chart-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; margin:30px 0 8px;}
+  figure.chart{margin:0; padding:18px; border:1px solid var(--rule); background:var(--paper-warm);}
+  figure.chart svg{display:block; width:100%; height:auto;}
+  figure.chart figcaption{font-size:13.5px; color:var(--ink-soft); margin-top:10px;}
+  .chart-title{font-family:'Fraunces',serif; font-size:17px; fill:var(--ink);}
+  .chart-label{font-family:'IBM Plex Sans',sans-serif; font-size:11px; fill:var(--ink-soft);}
+  .chart-gridline{stroke:var(--rule); stroke-width:1;}
+
+  footer{
+    padding:56px 0 90px;
+  }
+  footer p{color:var(--ink-soft); font-size:14.5px;}
+  a{color:var(--decline);}
+
+  @media (max-width:600px){
+    header.hero{padding:56px 0 40px;}
+    .result-card{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="kicker">FlyRank Internship &mdash; Applied Search Intelligence &middot; Lane 2</p>
+    <h1>The Refresh Queue</h1>
+    <p class="lede">Predicting which pages will lose search traffic before it happens &mdash; and
+    whether a model is even worth building to find out.</p>
+  </header>
+</div>
+
+<div class="wide">
+  <div class="result-card">
+    <div class="stat">
+      <span class="num decline">98%</span>
+      <span class="label">precision in the top 50 flagged pages &mdash; matched by a transparent baseline</span>
+    </div>
+    <div class="stat">
+      <span class="num">58%</span>
+      <span class="label">of pages actually declined in the test set &mdash; the floor any method has to beat</span>
+    </div>
+    <div class="stat">
+      <span class="num grow">0.81</span>
+      <span class="label">ROC-AUC for the Random Forest, on clients it had never scored before</span>
+    </div>
+    <div class="stat">
+      <span class="num">13 of 51</span>
+      <span class="label">clients held out entirely for testing &mdash; never touched during training</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section class="shared" id="abstract">
+  <h2 class="section-title">Abstract</h2>
+  <p>Content teams can only review a fraction of their pages each month &mdash; so which pages should
+  they look at first? We built a decline-prediction pipeline on 174,704 pages across 51 clients
+  from FlyRank's search-performance warehouse, using 89 days of prior search signals to predict
+  a 30-day-forward drop in impressions. A Random Forest model reaches 0.81 ROC-AUC and matches
+  a hand-written, leakage-audited baseline at 98% precision in the top 50 candidates, against a
+  58% base rate. Two leakage bugs were found and fixed during development &mdash; a window-length
+  normalization error and a baseline rule that had accidentally used the label itself as an
+  input &mdash; and both are documented here rather than smoothed over. The purpose of this study is
+  decision support: a ranked, reason-coded queue for a human reviewer, not an automated editing
+  or publishing system.</p>
+
+  <hr class="rule">
+
+  <h2 class="section-title">Introduction / Problem statement</h2>
+  <p>Content teams have far more pages than they can review in a monthly cycle. This study asks
+  whether prior search-performance and content metadata can rank pages by near-term decline risk
+  well enough to focus scarce human review time. The intended outcome is a transparent,
+  reason-coded review queue; it is not an automated editing, publishing, deletion, or redirect
+  system.</p>
+
+  <hr class="rule">
+
+  <h2 class="section-title">Data &amp; Methodology</h2>
+  <p>Data comes from FlyRank's pseudonymized internship warehouse on Hugging Face
+  (<code>fact_content_daily_performance</code> and <code>dim_content</code>), ~79M daily rows
+  across 104 clients before filtering. One row = one content item within one client, summarized
+  over an 89-day feature window ending at a single decision point, 2026-04-30, with an outcome
+  observed over the following 30 days.</p>
+  <p><b>Label:</b> a page is "declining" if its 30-day-forward impressions fall more than 20%
+  below what its 89-day pace would predict for an equivalent 30-day span (normalized for the
+  unequal window lengths). <b>Features (9):</b> prior impressions, clicks, and average
+  position; word count (with a missing-value flag); content age; content type and search
+  intent; and a binary flag for whether the page's last-update date was even known at decision
+  time. <b>Excluded on purpose:</b> pseudonymous IDs (grouping only), the raw
+  days-since-last-update number (83% of values were unusable at this decision point), FlyRank's
+  own product flags, and anything from the 30-day outcome window.</p>
+  <p><b>Baseline:</b> four transparent, weighted rules &mdash; stale-but-visible, declining-with-demand,
+  thin-but-visible, and ranking-well-but-aging &mdash; each thresholded on this population's own
+  percentiles, each producing a plain-language reason. <b>Validation:</b> a client-holdout split
+  (38 training clients, 13 held out entirely). This design choice was motivated by an earlier
+  trial run where a plain random split measurably inflated the score compared to a client-holdout
+  split on the same data (see Split sensitivity below) &mdash; pages from the same client can share
+  editorial and traffic patterns that a random split lets leak across train and test.</p>
+
+  <table>
+    <tr><th>Method</th><th class="num">ROC-AUC</th><th class="num">P@20</th><th class="num">P@50</th><th class="num">P@100</th></tr>
+    <tr><td>Base rate (always predict majority)</td><td class="num">&mdash;</td><td class="num">0.58</td><td class="num">0.58</td><td class="num">0.58</td></tr>
+    <tr><td>Baseline (4 weighted rules)</td><td class="num">&mdash;</td><td class="num">0.95</td><td class="num">0.98</td><td class="num">0.96</td></tr>
+    <tr><td>Logistic Regression</td><td class="num">0.76</td><td class="num">0.65</td><td class="num">0.76</td><td class="num">0.76</td></tr>
+    <tr><td>Random Forest</td><td class="num">0.81</td><td class="num">0.95</td><td class="num">0.98</td><td class="num">0.97</td></tr>
+  </table>
+  <p class="takeaway">Takeaway: the linear model (Logistic Regression) noticeably underperforms
+  the hand-written baseline at the top of the ranking, despite a respectable overall score &mdash;
+  a more flexible model (Random Forest) closes almost all of that gap.</p>
+
+  <div class="chart-grid" aria-label="Results charts">
+    <figure class="chart">
+      <svg viewBox="0 0 360 235" role="img" aria-labelledby="precision-chart-title">
+        <title id="precision-chart-title">Precision at K for baseline, Logistic Regression, and Random Forest</title>
+        <text x="8" y="20" class="chart-title">Model vs. baseline precision</text>
+        <line x1="42" y1="50" x2="340" y2="50" class="chart-gridline"/><line x1="42" y1="94" x2="340" y2="94" class="chart-gridline"/><line x1="42" y1="138" x2="340" y2="138" class="chart-gridline"/><line x1="42" y1="182" x2="340" y2="182" class="chart-gridline"/>
+        <text x="10" y="54" class="chart-label">1.00</text><text x="10" y="98" class="chart-label">0.85</text><text x="10" y="142" class="chart-label">0.70</text><text x="10" y="186" class="chart-label">0.55</text>
+        <path d="M80 68.7 L190 59.9 L300 65.7" fill="none" stroke="#B84730" stroke-width="3"/><circle cx="80" cy="68.7" r="4" fill="#B84730"/><circle cx="190" cy="59.9" r="4" fill="#B84730"/><circle cx="300" cy="65.7" r="4" fill="#B84730"/>
+        <path d="M80 68.7 L190 59.9 L300 62.8" fill="none" stroke="#4F7360" stroke-width="3" stroke-dasharray="0"/><circle cx="80" cy="68.7" r="3" fill="#4F7360"/><circle cx="190" cy="59.9" r="3" fill="#4F7360"/><circle cx="300" cy="62.8" r="4" fill="#4F7360"/>
+        <path d="M80 156.7 L190 124.4 L300 124.4" fill="none" stroke="#C68A2E" stroke-width="3"/><circle cx="80" cy="156.7" r="4" fill="#C68A2E"/><circle cx="190" cy="124.4" r="4" fill="#C68A2E"/><circle cx="300" cy="124.4" r="4" fill="#C68A2E"/>
+        <path d="M80 153 L190 121 L300 121" fill="none" stroke="#C68A2E" stroke-width="3"/><circle cx="80" cy="153" r="4" fill="#C68A2E"/><circle cx="190" cy="121" r="4" fill="#C68A2E"/><circle cx="300" cy="121" r="4" fill="#C68A2E"/>
+        <text x="65" y="207" class="chart-label">P@20</text><text x="175" y="207" class="chart-label">P@50</text><text x="282" y="207" class="chart-label">P@100</text>
+        <line x1="45" y1="224" x2="60" y2="224" stroke="#B84730" stroke-width="3"/><text x="64" y="228" class="chart-label">Baseline</text><line x1="145" y1="224" x2="160" y2="224" stroke="#4F7360" stroke-width="3"/><text x="164" y="228" class="chart-label">Random Forest</text><line x1="265" y1="224" x2="280" y2="224" stroke="#C68A2E" stroke-width="3"/><text x="284" y="228" class="chart-label">Logistic</text>
+      </svg>
+      <figcaption>Held-out client split: the baseline and Random Forest both reach 98% precision at 50; Random Forest improves P@100 to 97%.</figcaption>
+    </figure>
+    <figure class="chart">
+      <svg viewBox="0 0 360 235" role="img" aria-labelledby="age-chart-title">
+        <title id="age-chart-title">Observed decline rate by content age</title>
+        <text x="8" y="20" class="chart-title">Observed decline rate by age</text>
+        <line x1="42" y1="52" x2="340" y2="52" class="chart-gridline"/><line x1="42" y1="117" x2="340" y2="117" class="chart-gridline"/><line x1="42" y1="182" x2="340" y2="182" class="chart-gridline"/>
+        <text x="10" y="56" class="chart-label">75%</text><text x="10" y="121" class="chart-label">50%</text><text x="10" y="186" class="chart-label">25%</text>
+        <rect x="58" y="149" width="38" height="33" fill="#B84730"/><rect x="113" y="73" width="38" height="109" fill="#B84730"/><rect x="168" y="63" width="38" height="119" fill="#B84730"/><rect x="223" y="80" width="38" height="102" fill="#B84730"/><rect x="278" y="115" width="38" height="67" fill="#B84730"/>
+        <text x="57" y="202" class="chart-label">0&ndash;90d</text><text x="107" y="202" class="chart-label">91&ndash;180d</text><text x="161" y="202" class="chart-label">181&ndash;270d</text><text x="216" y="202" class="chart-label">271&ndash;365d</text><text x="278" y="202" class="chart-label">365d+</text>
+        <text x="65" y="143" class="chart-label">37.9</text><text x="120" y="67" class="chart-label">67.1</text><text x="175" y="57" class="chart-label">70.9</text><text x="230" y="74" class="chart-label">65.3</text><text x="285" y="109" class="chart-label">48.6</text>
+      </svg>
+      <figcaption>Descriptive, not causal: pages aged 181&ndash;270 days had the highest observed decline rate (70.9%) in this snapshot.</figcaption>
+    </figure>
+  </div>
+
+  <hr class="rule">
+
+  <h2 class="section-title">Limitations</h2>
+  <p>This is one snapshot (2026-04-30), not a multi-window backtest &mdash; the honest score at a
+  different decision point could differ. Only the 13 held-out clients' rows are genuinely
+  out-of-sample; scores for the 38 training clients are in-sample and likely optimistic. This
+  work is observational: a high score means "worth reviewing first," not "guaranteed to
+  decline" or "guaranteed to improve after a refresh" &mdash; no causal experiment was run. Only
+  Google Search Console signals were used; declines that are really consolidation (a sibling
+  page absorbing the traffic) or seasonality can look identical to a real decline in this
+  feature set. FlyRank's own composite scores and flags were never used as inputs or labels.</p>
+</section>
+
+<section class="door-select">
+  <h2>Read this as...</h2>
+  <p>The numbers, methodology, and limitations above don't change below &mdash; only how they're
+  framed does.</p>
+  <div class="doors">
+    <button type="button" class="door-label active" data-door="eng">
+      <span class="doorframe"></span>
+      <span class="door-title">An ML reviewer</span>
+      <span class="door-sub">Splits, leakage audit, reproducibility</span>
+    </button>
+
+    <button type="button" class="door-label" data-door="hire">
+      <span class="doorframe"></span>
+      <span class="door-title">A hiring manager</span>
+      <span class="door-sub">What this proves about how I work</span>
+    </button>
+
+    <button type="button" class="door-label" data-door="seo">
+      <span class="doorframe"></span>
+      <span class="door-title">A content / SEO team</span>
+      <span class="door-sub">What to do Monday morning</span>
+    </button>
+  </div>
+</section>
+
+<div class="panels">
+
+<section class="door-panel active" data-panel="eng">
+  <h2 class="section-title">For the technical reviewer</h2>
+
+  <h3>Split sensitivity</h3>
+  <p>The same Random Forest, same features, scored under two split designs on the identical
+  data:</p>
+  <table>
+    <tr><th>Split</th><th class="num">ROC-AUC</th></tr>
+    <tr><td>Plain random row split (80/20, no grouping)</td><td class="num">0.81</td></tr>
+    <tr><td>Client-holdout split (grouped by client)</td><td class="num">0.81</td></tr>
+  </table>
+  <p class="takeaway">On this particular feature set the gap between the two splits was small
+  at the current scale &mdash; but it was not always small. An earlier, shorter 15-day/15-day trial
+  run showed a client-holdout score of 0.47 versus 0.54 for a random split on the same data,
+  which is what first surfaced the risk and motivated using client-holdout as the reported
+  design throughout, even once the gap narrowed at full scale.</p>
+
+  <h3>Leakage handling as methodology, not a caveat</h3>
+  <p>Two leakage issues were found and corrected during development, not discovered after the
+  fact by a reviewer:</p>
+  <div class="fasm risk">
+    <h4>1. Window-length normalization</h4>
+    <p class="fasm-row"><b>Symptom:</b> comparing a 90-day impression sum directly against a
+    30-day sum made 86.6% of pages look "declining" by construction.</p>
+    <p class="fasm-row"><b>Fix:</b> scale the feature-window sum to the label window's length
+    before comparing. Corrected rate: 56.3%.</p>
+  </div>
+  <div class="fasm risk">
+    <h4>2. Label used inside a baseline rule</h4>
+    <p class="fasm-row"><b>Symptom:</b> the baseline's "declining-with-demand" rule originally
+    read the label itself as a condition, producing near-perfect (artificial) top-K precision.</p>
+    <p class="fasm-row"><b>Fix:</b> redefined using only within-feature-window data (first half
+    vs. second half of the 89-day window). Confirmed leakage-free: label correlation of 0.24
+    (not ~1.0), with 88% precision among rows the rule fires on &mdash; consistent with genuine trend
+    persistence, not circularity.</p>
+  </div>
+  <div class="callout">
+    <h4>Deliberate leak, reproduced on the final feature set</h4>
+    <p style="margin-bottom:0">Adding the label-derived future-window sum back in as a feature
+    (on purpose, as a check) pushed ROC-AUC from &asymp;0.81 to &asymp;0.99 &mdash; a jump large enough to be an
+    unmistakable leakage signal, and the exact failure mode both bugs above were caught by
+    testing for.</p>
+  </div>
+
+  <h3>Reproducibility</h3>
+  <p><code>random_state=42</code> throughout (splits and models). Environment: Python 3,
+  scikit-learn, pandas, DuckDB reading Parquet directly from the Hugging Face-hosted warehouse
+  (<code>FlyRank/internship-warehouse</code>). Every number above maps to a committed,
+  executed notebook: <code>w03_data_contract.ipynb</code> (contract + leakage demo),
+  <code>w04_baseline_score.ipynb</code> (baseline + ranked queue),
+  <code>w05_model.ipynb</code> (model vs. baseline), <code>w06_validation_audit.ipynb</code>
+  (split sensitivity + leakage audit), <code>w07_action_playbook.ipynb</code> (final action
+  queue). The executed <a href="https://github.com/omaradelahmed/fly-rank-internship1/tree/main/work/notebooks">notebooks</a>
+  and <a href="https://github.com/omaradelahmed/fly-rank-internship1">repository</a> are public; the baseline notebook is also available
+  <a href="https://github.com/omaradelahmed/fly-rank-internship1/blob/main/work/notebooks/w04_baseline_score.ipynb">directly</a>.</p>
+</section>
+
+<section class="door-panel" data-panel="hire">
+  <h2 class="section-title">For the hiring manager</h2>
+  <p>The short version: on clients the model had never scored before, it ranks the highest-risk
+  pages with <b>98% precision in the top 50</b> &mdash; matching a rule-based baseline that took a
+  full week to build and audit properly, against a 58% base rate. A technical interviewer on
+  your team can dig into the split design, the leakage audit, and the reproducibility details
+  in the ML-reviewer panel above.</p>
+
+  <h3>Where it went wrong, and what that became</h3>
+  <p>Two mistakes made it into the pipeline during development, and both are documented above
+  rather than hidden: a window-length bug that briefly made 87% of the portfolio look
+  "declining," and a baseline rule that briefly used its own answer as an input. Neither
+  survived to the reported numbers &mdash; both were caught by building a leakage-audit habit into
+  every stage, not by luck. That audit habit became a permanent guardrail: every rule and
+  feature in this pipeline is now checked for label correlation before it's trusted.</p>
+
+  <h3>What ships</h3>
+  <p>A ranked, reason-coded action queue (see the content-team panel) with four concrete review
+  categories, a documented in-sample/out-of-sample caveat for every score, and a monitoring
+  checklist for when the whole pipeline needs re-auditing rather than just re-running.</p>
+</section>
+
+<section class="door-panel" data-panel="seo">
+  <h2 class="section-title">For the content team</h2>
+
+  <div class="callout">
+    <h4>TL;DR</h4>
+    <div class="tldr-line"><b>Question</b> Which pages should we review first?</div>
+    <div class="tldr-line"><b>Data</b> 174,704 pages, 51 clients, 89 days of search history each.</div>
+    <div class="tldr-line"><b>Result</b> Top 50 flagged pages: 98% actually declining, vs. 58% overall.</div>
+    <div class="tldr-line"><b>Decision</b> Use the four-category queue below to triage weekly review capacity.</div>
+    <div class="tldr-line"><b>Caveat</b> This ranks priority &mdash; it doesn't prove why a page will decline, and it can't tell a real decline apart from a sibling page stealing its traffic.</div>
+  </div>
+
+  <h3>Ranked action playbook</h3>
+  <p>Within each action, order pages by risk score (or baseline score where a rule supplies the
+  reason). Apply these action types in this order: first validate implausible spikes, then review
+  high-risk pages without a simple explanation, then act on transparent rule-based signals, and
+  finally monitor healthy pages.</p>
+
+  <div class="fasm risk">
+    <h4>1. Verify then Review</h4>
+    <p class="fasm-row"><b>Finding:</b> traffic jumped 7x or more in a short window.</p>
+    <p class="fasm-row"><b>Action:</b> confirm it's real before trusting it either way.</p>
+    <p class="fasm-row"><b>Guardrail:</b> rule out a tracking artifact or a paid campaign first.</p>
+    <p class="fasm-row"><b>Measure:</b> whether the spike holds for another 30 days.</p>
+  </div>
+
+  <div class="fasm">
+    <h4>2. Investigate Quiet Risk</h4>
+    <p class="fasm-row"><b>Finding:</b> the model flags real risk, but no simple rule explains why.</p>
+    <p class="fasm-row"><b>Action:</b> this is exactly where a human read is most valuable &mdash; nothing obvious will jump out from a dashboard.</p>
+    <p class="fasm-row"><b>Guardrail:</b> never auto-action this category; it requires a person to supply the reason.</p>
+    <p class="fasm-row"><b>Measure:</b> track whether these pages do decline over the next 30 days, to calibrate trust in the model over time.</p>
+  </div>
+
+  <div class="fasm">
+    <h4>3. Review before Revert</h4>
+    <p class="fasm-row"><b>Finding:</b> a concrete, rule-based reason fired (stale-but-visible, thin-but-visible, aging-but-ranking-well, or declining-with-demand).</p>
+    <p class="fasm-row"><b>Action:</b> check the specific reason code, then decide: refresh, expand, or protect.</p>
+    <p class="fasm-row"><b>Guardrail:</b> confirm it isn't consolidation &mdash; did a sibling page absorb the same demand?</p>
+    <p class="fasm-row"><b>Measure:</b> impressions and position 30/60 days after any edit.</p>
+  </div>
+
+  <div class="fasm">
+    <h4>4. Monitor Only</h4>
+    <p class="fasm-row"><b>Finding:</b> steady, healthy performance &mdash; no rule, no spike, low model risk.</p>
+    <p class="fasm-row"><b>Action:</b> leave it alone.</p>
+    <p class="fasm-row"><b>Guardrail:</b> editing healthy pages without a reason risks unintended harm.</p>
+    <p class="fasm-row"><b>Measure:</b> re-check at the next monthly cycle.</p>
+  </div>
+
+  <p class="takeaway">Every recommendation here is predictive, not causal &mdash; the model does not
+  prove anything about Google's ranking algorithm. It prioritizes where a limited review team
+  should look first.</p>
+</section>
+
+</div><!-- /panels -->
+
+<footer>
+  <hr class="rule">
+  <p><b>Data credit:</b> Built on the
+  <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank ML Internship dataset</a>
+  (pseudonymized internship warehouse release
+  <code>flyrank_pseudonymized_warehouse_release_v20260703</code>). <b>Acknowledgments:</b>
+  FlyRank Applied Search Intelligence internship program.</p>
+  <p>Repository: <a href="https://github.com/omaradelahmed/fly-rank-internship1">github.com/omaradelahmed/fly-rank-internship1</a></p>
+</footer>
+
+</div><!-- /wrap -->
+
+<script>
+  const doorButtons = document.querySelectorAll('.door-label');
+  const doorPanels = document.querySelectorAll('.door-panel');
+
+  doorButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-door');
+
+      doorButtons.forEach(b => b.classList.toggle('active', b === btn));
+      doorPanels.forEach(p => p.classList.toggle('active', p.getAttribute('data-panel') === target));
+
+      document.querySelector('.panels').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
